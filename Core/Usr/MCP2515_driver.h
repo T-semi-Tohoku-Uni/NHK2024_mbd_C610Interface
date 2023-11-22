@@ -19,10 +19,10 @@
 
 typedef struct
 {
-	GPIO_TypeDef GPIOx;
+	GPIO_TypeDef *GPIOx;
 	uint16_t  	 GPIO_Pin;
 
-	SPI_HandleTypeDef hspi;
+	SPI_HandleTypeDef *hspi;
 }MCP_HandleTypeDef;
 
 typedef struct
@@ -46,16 +46,22 @@ typedef struct
 typedef struct
 {
 	uint8_t DLC;
-	uint32_t ID;
+	uint16_t SID;
+	uint16_t EID;
 }MCP_TxHeaderTypeDef;
 
-
 HAL_StatusTypeDef MCP_SPI_Transmit(MCP_HandleTypeDef *hMCP, uint8_t *pData, uint16_t Size);
-HAL_StatusTypeDef MCP_SPI_Receive(MCP_HandleTypeDef *hMCP);
+HAL_StatusTypeDef MCP_SPI_Receive(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t *pTxData, uint16_t Size);
+
+HAL_StatusTypeDef MCP_Write(MCP_HandleTypeDef *hMCP, uint8_t Address, uint8_t *pTxData, uint16_t Size);
+HAL_StatusTypeDef MCP_Read(MCP_HandleTypeDef *hMCP, uint8_t addr, uint8_t *pRxData, uint8_t Size);
+
+HAL_StatusTypeDef MCP_Read_RxBuffer(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t Size);
+HAL_StatusTypeDef MCP_Write_TxBuffer(MCP_HandleTypeDef *hMCP, MCP_TxHeaderTypeDef *TxHeader, uint8_t *pTxData);
 
 HAL_StatusTypeDef MCP_SetStdFilter(MCP_HandleTypeDef *hMCP, uint8_t FilterN, uint16_t ID);
 HAL_StatusTypeDef MCP_SetStdMask(MCP_HandleTypeDef *hMCP, uint8_t   MaskN, uint16_t ID);
-HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP,);
+HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP);
 HAL_StatusTypeDef MCP_Reset(MCP_HandleTypeDef *hMCP);
 
 HAL_StatusTypeDef MCP_CAN_Transmit(MCP_HandleTypeDef *hMCP, );
