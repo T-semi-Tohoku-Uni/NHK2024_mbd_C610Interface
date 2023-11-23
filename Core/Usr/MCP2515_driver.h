@@ -14,7 +14,9 @@
 
 #include "MCP2515.h"
 
-#define SPI_TIMEOUT 1000
+#define MCP_SPI_TIMEOUT 1000
+#define MCP_TRUE 1
+#define MCP_FALSE 0
 
 
 typedef struct
@@ -30,15 +32,21 @@ typedef struct
 	uint8_t mode;
 	uint8_t syncJumpWidth;
 	uint8_t baudRatePrescaler;
-	uint8_t propSegment;
-	uint8_t phaseSegment1;
-	uint8_t phaseSegment2;
-	uint8_t startOfFrame;
-	uint8_t wakeUpFilter;
+	uint8_t propSegment;//smaller than 8. Length of PhaseSegment1(1Tq~8Tq).
+	uint8_t phaseSegment1;//smaller than 8. Length of PhaseSegment1(1Tq~8Tq).
+	uint8_t phaseSegment2;//must be over 1, smaller than 8. Length of PhaseSegment2(2Tq~8Tq).
+	uint8_t startOfFrame;//SOF_ENABLE or SOF_DISABLE
+	uint8_t wakeUpFilter;//WAKFIL_ENABLE or WAKFIL_DISABLE
 	uint8_t bitTimeLengthMode;
 	uint8_t SAM;
-	uint16_t filter[6];
-	uint16_t mask[2];
+
+	uint16_t SFilter[6];
+	uint16_t EFilter[6];
+	uint16_t SMask[2];
+	uint16_t EMask[2];
+	uint8_t enableRX0IT;//MCP_TRUE/FALSE
+	uint8_t enableRX1IT;//MCP_TRUE/FALSE
+	uint8_t CANITEnable;
 
 
 }MCP_InitTypeDef;
@@ -50,6 +58,8 @@ typedef struct
 	uint16_t EID;
 }MCP_TxHeaderTypeDef;
 
+void USR_Split_uint162uint8(uint16_t, uint8_t*, uint8_t*);
+
 HAL_StatusTypeDef MCP_SPI_Transmit(MCP_HandleTypeDef *hMCP, uint8_t *pData, uint16_t Size);
 HAL_StatusTypeDef MCP_SPI_Receive(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t *pTxData, uint16_t Size);
 
@@ -59,14 +69,8 @@ HAL_StatusTypeDef MCP_Read(MCP_HandleTypeDef *hMCP, uint8_t addr, uint8_t *pRxDa
 HAL_StatusTypeDef MCP_Read_RxBuffer(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t Size);
 HAL_StatusTypeDef MCP_Write_TxBuffer(MCP_HandleTypeDef *hMCP, MCP_TxHeaderTypeDef *TxHeader, uint8_t *pTxData);
 
-HAL_StatusTypeDef MCP_SetStdFilter(MCP_HandleTypeDef *hMCP, uint8_t FilterN, uint16_t ID);
-HAL_StatusTypeDef MCP_SetStdMask(MCP_HandleTypeDef *hMCP, uint8_t   MaskN, uint16_t ID);
 HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP);
 HAL_StatusTypeDef MCP_Reset(MCP_HandleTypeDef *hMCP);
-
-HAL_StatusTypeDef MCP_CAN_Transmit(MCP_HandleTypeDef *hMCP, );
-HAL_StatusTypeDef MCP_CAN_Receive (MCP_HandleTypeDef );
-
 
 
 
