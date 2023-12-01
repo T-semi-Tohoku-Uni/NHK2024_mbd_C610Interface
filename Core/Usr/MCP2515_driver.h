@@ -58,7 +58,7 @@ typedef struct
 	uint16_t EID;
 }MCP_TxHeaderTypeDef;
 
-void USR_Split_uint162uint8(uint16_t, uint8_t*, uint8_t*);
+void __USR_Split_uint16to2uint8_t(uint16_t, uint8_t*, uint8_t*);
 
 HAL_StatusTypeDef MCP_SPI_Transmit(MCP_HandleTypeDef *hMCP, uint8_t *pData, uint16_t Size);
 HAL_StatusTypeDef MCP_SPI_Receive(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t *pTxData, uint16_t Size);
