@@ -22,11 +22,12 @@ HAL_StatusTypeDef MCP_SPI_Transmit(MCP_HandleTypeDef *hMCP, uint8_t *pData, uint
 
 
 //Just add the toggling pin code for CS to HAL_SPI_TxRx. MCP2515 only gives us data when it receive specific commands.
+//In this case, Size means the size of the RxData.
 HAL_StatusTypeDef MCP_SPI_Receive(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t *pTxData, uint16_t Size)
 {
 	HAL_GPIO_WritePin(hMCP->GPIOx, hMCP->GPIO_Pin, RESET);
 
-	if(HAL_OK != HAL_SPI_TransmitReceive(hMCP->hspi, pTxData, pRxData, Size, MCP_SPI_TIMEOUT)){
+	if(HAL_OK != HAL_SPI_TransmitReceive(hMCP->hspi, pTxData, pRxData, Size + 1, MCP_SPI_TIMEOUT)){
 		return HAL_ERROR;
 	}
 	HAL_GPIO_WritePin(hMCP->GPIOx, hMCP->GPIO_Pin, SET);
@@ -34,7 +35,7 @@ HAL_StatusTypeDef MCP_SPI_Receive(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uin
 }
 
 
-//
+//ordinal write command.
 HAL_StatusTypeDef MCP_Write(MCP_HandleTypeDef *hMCP, uint8_t Address, uint8_t *pTxData, uint16_t Size)
 {
 	uint8_t buff[Size+2];
@@ -58,7 +59,7 @@ HAL_StatusTypeDef MCP_Read(MCP_HandleTypeDef *hMCP, uint8_t addr, uint8_t *pRxDa
 	return MCP_SPI_Receive(hMCP, pRxData, TxData, sizeof(TxData)/sizeof(TxData[0]));
 }
 
-
+//reset MCP2515.
 HAL_StatusTypeDef MCP_Reset(MCP_HandleTypeDef *hMCP)
 {
 	uint8_t TxData = MCP_RESET;
@@ -67,13 +68,13 @@ HAL_StatusTypeDef MCP_Reset(MCP_HandleTypeDef *hMCP)
 }
 
 
+//Read data of RxBuffers of MCP2515. Size must be larger than DLC+5(HSID, LSID, 8EID, 0EID and DLC) for CAN headers
 HAL_StatusTypeDef MCP_Read_RxBuffer(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, uint8_t Size)
 {
 	uint8_t TxData = MCP_READ_RX0;
 
 
-	HAL_GPIO_WritePin(hMCP->GPIOx, hMCP->GPIO_Pin, RESET);
-	if(HAL_OK != HAL_SPI_TransmitReceive(hMCP->hspi, &TxData, pRxData, Size, MCP_SPI_TIMEOUT)){
+	if(HAL_OK != MCP_SPI_Receive(hMCP, pRxData, &TxData, Size)){
 		return HAL_ERROR;
 	}
 
@@ -84,6 +85,7 @@ HAL_StatusTypeDef MCP_Read_RxBuffer(MCP_HandleTypeDef *hMCP, uint8_t *pRxData, u
 }
 
 
+//Set data frame to TxBuffer of MCP2515.
 HAL_StatusTypeDef MCP_Write_TxBuffer(MCP_HandleTypeDef *hMCP, MCP_TxHeaderTypeDef *TxHeader, uint8_t *pTxData)
 {
 	uint8_t a=0;
@@ -115,8 +117,11 @@ void Split_uint16To2uint8(uint16_t buff, uint8_t *HByte, uint8_t *LByte){
 }
 
 
+//complete code to configure all of the settings: Pin settings, filter and mask.
+//Please execute this function after MCP_Reset.
+//After execute this code, you can start CAN communication with MCP_Start.
 HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP){
-	uint8_t TxData[MCP_BFPCTRL - MCP_RXF0SIDH];  //13byte
+	uint8_t TxData[MCP_BFPCTRL - MCP_RXF0SIDH - 1];  //13byte
 
 	if(iMCP->phaseSegment1>=8 || iMCP->phaseSegment2>=8 || iMCP->phaseSegment2 == 0 ||iMCP->propSegment>=8)return HAL_ERROR;
 
@@ -129,7 +134,7 @@ HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP){
 	//Configure RXnBF Pins setting.
 	TxData[MCP_BFPCTRL] = iMCP->enableRX0IT?0x05:0x00|iMCP->enableRX1IT?0x0A:0x00;
 
-	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, MCP_BFPCTRL - MCP_RXF0SIDH)){
+	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, MCP_BFPCTRL - MCP_RXF0SIDH - 1)){
 		return HAL_ERROR;
 	}
 
@@ -140,7 +145,7 @@ HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP){
 		__USR_Split_uint16to2uint8_t(iMCP->EFilter[i+3], &TxData[4*i + 2], &TxData[4*i + 3]);
 	}
 
-	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, MCP_RXF5EID0 - MCP_RXF3SIDH)){
+	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, MCP_RXF5EID0 - MCP_RXF3SIDH - 1)){
 		return HAL_ERROR;
 	}
 
@@ -155,11 +160,22 @@ HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP){
 	TxData[10] = iMCP->syncJumpWidth|iMCP->baudRatePrescaler;//MCP_CNF1
 	TxData[11] = iMCP->CANITEnable;//MCP_CANINTE
 
-	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, MCP_CANINTE - MCP_RXM0SIDH)){
+	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, MCP_CANINTE - MCP_RXM0SIDH - 1)){
 		return HAL_ERROR;
 	}
 
+	//set CANCTRL register.
+	TxData[0] = iMCP->abort|iMCP->oneShotMode|iMCP->clockEnable|iMCP->clockPrescaler;
+	if(HAL_OK != MCP_Write(hMCP, MCP_RXF0SIDH, TxData, 1)){
+		return HAL_ERROR;
+	}
 	return HAL_OK;
+}
 
+//Change the mode and start the CAN communication. Be careful this function will change all of the bit of CANCTRL　Register respective iMCP settings.
+HAL_StatusTypeDef MCP_Start(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP)
+{
+	uint8_t TxData = iMCP->mode|iMCP->abort|iMCP->oneShotMode|iMCP->clockEnable|iMCP->clockPrescaler;
 
+	return MCP_Write(hMCP, MCP_RXF0SIDH, &TxData, 1);
 }

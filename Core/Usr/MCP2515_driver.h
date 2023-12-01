@@ -29,7 +29,14 @@ typedef struct
 
 typedef struct
 {
-	uint8_t mode;
+	//For CANCTRL Register
+	uint8_t mode; //MODE_NORMAL, MODE_SLEEP, MODE_LOOPBACK, MODE_LISTENONLY, MODE_CONFIG or MODE_POWERUP
+	uint8_t oneShotMode ; //MODE_ONESHOT or 0
+	uint8_t clockPrescaler; //CLKOUT_PS1, CLKOUT_PS2, CLKOUT_PS4 or CLKOUT_PS8(0,1,2,3)
+	uint8_t clockEnable; //CLKOUT_ENABLE or CLKOUT_DISABLE
+	uint8_t abort; //ABORT_TX or 0
+
+
 	uint8_t syncJumpWidth;
 	uint8_t baudRatePrescaler;
 	uint8_t propSegment;//smaller than 8. Length of PhaseSegment1(1Tq~8Tq).
@@ -39,6 +46,7 @@ typedef struct
 	uint8_t wakeUpFilter;//WAKFIL_ENABLE or WAKFIL_DISABLE
 	uint8_t bitTimeLengthMode;
 	uint8_t SAM;
+
 
 	uint16_t SFilter[6];
 	uint16_t EFilter[6];
@@ -71,6 +79,7 @@ HAL_StatusTypeDef MCP_Write_TxBuffer(MCP_HandleTypeDef *hMCP, MCP_TxHeaderTypeDe
 
 HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP);
 HAL_StatusTypeDef MCP_Reset(MCP_HandleTypeDef *hMCP);
+HAL_StatusTypeDef MCP_Start(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP);
 
 
 
