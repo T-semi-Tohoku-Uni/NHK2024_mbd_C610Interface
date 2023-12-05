@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "MCP2515_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,6 +47,9 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+MCP_HandleTypeDef hmcp;
+MCP_InitTypeDef imcp;
+MCP_TxHeaderTypeDef hdrmcp;
 
 /* USER CODE END PV */
 
@@ -97,7 +100,60 @@ int main(void)
   MX_FDCAN1_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  hmcp.GPIOx = GPIOA;
+  hmcp.GPIO_Pin = GPIO_PIN_4;
+  hmcp.hspi = &hspi1;
 
+  hdrmcp.DLC = 8;
+  hdrmcp.EID = 0x00;
+  hdrmcp.SID = 0x200;
+
+  //settings
+  imcp.mode = MODE_NORMAL;
+  imcp.oneShotMode = MCP_FALSE;
+  imcp.clockEnable = CLKOUT_DISABLE;
+  imcp.clockPrescaler = CLKOUT_PS1;
+  imcp.abort = MCP_FALSE;
+
+  imcp.startOfFrame = SOF_DISABLE;
+  imcp.wakeUpFilter = WAKEFIL_DISABLE;
+  imcp.bitTimeLengthMode = BTLMODE;
+  imcp.sample = SAMPLE_1X;
+  imcp.syncJumpWidth = SJW1;
+
+  imcp.baudRatePrescaler = 0;
+  imcp.propSegment = 1;
+  imcp.phaseSegment1 = 2;
+  imcp.phaseSegment2 = 1;
+
+  imcp.enableRX0IT = MCP_TRUE;
+  imcp.enableRX1IT = MCP_FALSE;
+  imcp.CANITEnable = 0;
+
+
+  imcp.SMask[0]   = 0x7F0;
+  imcp.EMask[0]   = 0x000;
+  imcp.SFilter[0] = 0x200;
+  imcp.EFilter[0] = 0x000;
+  imcp.SFilter[1] = 0x200;
+  imcp.EFilter[1] = 0x000;
+
+  imcp.SMask[1]   = 0x000;
+  imcp.EMask[1]   = 0x000;
+  imcp.SFilter[2] = 0x000;
+  imcp.SFilter[2] = 0x000;
+  imcp.EFilter[3] = 0x000;
+  imcp.SFilter[3] = 0x000;
+  imcp.EFilter[4] = 0x000;
+  imcp.SFilter[4] = 0x000;
+  imcp.EFilter[5] = 0x000;
+  imcp.SFilter[5] = 0x000;
+
+
+
+  MCP_Reset(hmcp);
+  MCP_Config(hmcp, imcp);
+  MCP_Start(hmcp, imcp);
   /* USER CODE END 2 */
 
   /* Infinite loop */

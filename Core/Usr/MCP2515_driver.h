@@ -31,21 +31,21 @@ typedef struct
 {
 	//For CANCTRL Register
 	uint8_t mode; //MODE_NORMAL, MODE_SLEEP, MODE_LOOPBACK, MODE_LISTENONLY, MODE_CONFIG or MODE_POWERUP
-	uint8_t oneShotMode ; //MODE_ONESHOT or 0
+	uint8_t oneShotMode ; //MODE_ONESHOT or MCP_FALSE
 	uint8_t clockPrescaler; //CLKOUT_PS1, CLKOUT_PS2, CLKOUT_PS4 or CLKOUT_PS8(0,1,2,3)
 	uint8_t clockEnable; //CLKOUT_ENABLE or CLKOUT_DISABLE
-	uint8_t abort; //ABORT_TX or 0
+	uint8_t abort; //ABORT_TX or MCP_FALSE
 
 
-	uint8_t syncJumpWidth;
+	uint8_t syncJumpWidth;//SJW1, SJW2, SJW3 or SJW4
 	uint8_t baudRatePrescaler;
-	uint8_t propSegment;//smaller than 8. Length of PhaseSegment1(1Tq~8Tq).
-	uint8_t phaseSegment1;//smaller than 8. Length of PhaseSegment1(1Tq~8Tq).
-	uint8_t phaseSegment2;//must be over 1, smaller than 8. Length of PhaseSegment2(2Tq~8Tq).
+	uint8_t propSegment;//must be 0~7. Length of propSegment1(1Tq~8Tq).
+	uint8_t phaseSegment1;//must be 0~7. Length of PhaseSegment1(1Tq~8Tq).
+	uint8_t phaseSegment2;//must be 1~7. Length of PhaseSegment2(2Tq~8Tq).
 	uint8_t startOfFrame;//SOF_ENABLE or SOF_DISABLE
 	uint8_t wakeUpFilter;//WAKFIL_ENABLE or WAKFIL_DISABLE
 	uint8_t bitTimeLengthMode;
-	uint8_t SAM;
+	uint8_t sample;
 
 
 	uint16_t SFilter[6];

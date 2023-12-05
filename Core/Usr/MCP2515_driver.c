@@ -156,7 +156,7 @@ HAL_StatusTypeDef MCP_Config(MCP_HandleTypeDef *hMCP, MCP_InitTypeDef *iMCP){
 	}
 
 	TxData[8] = iMCP->startOfFrame|iMCP->wakeUpFilter|iMCP->phaseSegment2;//MCP_CNF3
-	TxData[9] = BTLMODE|iMCP->SAM|(iMCP->phaseSegment1<<3)|iMCP->propSegment;//MCP_CNF2
+	TxData[9] = BTLMODE|iMCP->sample|(iMCP->phaseSegment1<<3)|iMCP->propSegment;//MCP_CNF2
 	TxData[10] = iMCP->syncJumpWidth|iMCP->baudRatePrescaler;//MCP_CNF1
 	TxData[11] = iMCP->CANITEnable;//MCP_CANINTE
 
