@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "MCP2515_driver.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +45,8 @@ FDCAN_HandleTypeDef hfdcan1;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim17;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -59,12 +62,17 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_FDCAN1_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int __io_putchar(int ch) {
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 100);
+    return ch;
+}
 
 /* USER CODE END 0 */
 
@@ -99,6 +107,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_FDCAN1_Init();
   MX_SPI1_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   hmcp.GPIOx = GPIOA;
   hmcp.GPIO_Pin = GPIO_PIN_4;
@@ -116,7 +125,7 @@ int main(void)
   imcp.abort = MCP_FALSE;
 
   imcp.startOfFrame = SOF_DISABLE;
-  imcp.wakeUpFilter = WAKEFIL_DISABLE;
+  imcp.wakeUpFilter = WAKFIL_DISABLE;
   imcp.bitTimeLengthMode = BTLMODE;
   imcp.sample = SAMPLE_1X;
   imcp.syncJumpWidth = SJW1;
@@ -151,9 +160,9 @@ int main(void)
 
 
 
-  MCP_Reset(hmcp);
-  MCP_Config(hmcp, imcp);
-  MCP_Start(hmcp, imcp);
+  MCP_Reset(&hmcp);
+  MCP_Config(&hmcp, &imcp);
+  MCP_Start(&hmcp, &imcp);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -298,6 +307,38 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
+  /* USER CODE BEGIN TIM17_Init 0 */
+
+  /* USER CODE END TIM17_Init 0 */
+
+  /* USER CODE BEGIN TIM17_Init 1 */
+
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 79;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 999;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM17_Init 2 */
+
+  /* USER CODE END TIM17_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -383,6 +424,17 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if(htim == &htim17){
+		printf("Timer Callback!!\r\n");
+		uint8_t TxData[8] = {0x17, 0x70, 0, 0, 0, 0, 0, 0};
+		hdrmcp.DLC = 8;
+		hdrmcp.SID = 0x200;
+		hdrmcp.EID = 0;
+		MCP_Write_TxBuffer(&hmcp, &hdrmcp, TxData);
+
+	}
+}
 
 /* USER CODE END 4 */
 
