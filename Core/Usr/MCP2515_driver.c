@@ -111,7 +111,7 @@ HAL_StatusTypeDef MCP_Write_TxBuffer(MCP_HandleTypeDef *hMCP, MCP_TxHeaderTypeDe
 }
 
 
-void Split_uint16To2uint8(uint16_t buff, uint8_t *HByte, uint8_t *LByte){
+void __USR_Split_uint16to2uint8_t(uint16_t buff, uint8_t *HByte, uint8_t *LByte){
 	*HByte = buff>>8;
 	*LByte = buff & 0xff;
 }

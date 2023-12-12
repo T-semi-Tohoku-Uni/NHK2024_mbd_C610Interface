@@ -8,9 +8,7 @@
 #ifndef USR_MCP2515_DRIVER_H_
 #define USR_MCP2515_DRIVER_H_
 
-#include "stm32g4xx_hal_def.h"
-#include "stm32g4xx_hal_gpio.h"
-#include "stm32g4xx_hal_spi.h"
+#include "main.h"
 
 #include "MCP2515.h"
 
