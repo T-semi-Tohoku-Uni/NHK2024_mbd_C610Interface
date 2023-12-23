@@ -163,6 +163,8 @@ int main(void)
   MCP_Reset(&hmcp);
   MCP_Config(&hmcp, &imcp);
   MCP_Start(&hmcp, &imcp);
+
+  HAL_TIM_Base_Start_IT(&htim17);
   /* USER CODE END 2 */
 
   /* Infinite loop */
